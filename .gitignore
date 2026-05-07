@@ -17,3 +17,7 @@ ENV/
 .DS_Store
 *.sqlite3
 robot_user.db
+
+# SQLite temporary files
+*.db-shm
+*.db-wal

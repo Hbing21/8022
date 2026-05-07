@@ -186,7 +186,12 @@ def list_session_photos(
 
     _authorize_guest_or_owner(sess, user, guest_token)
 
-    photos = db.query(Photo).filter(Photo.session_id == session_id).order_by(Photo.capture_time).all()
+    photos = (
+        db.query(Photo)
+        .filter(Photo.session_id == session_id)
+        .order_by(Photo.capture_time.desc(), Photo.file_name.asc(), Photo.id.asc())
+        .all()
+    )
 
     outs: List[PhotoOut] = []
     for ph in photos:
@@ -197,7 +202,9 @@ def list_session_photos(
                 owner_user_id=ph.owner_user_id,
                 file_name=ph.file_name,
                 url=ph.public_path,
+                robot_id=ph.robot_id or "",
                 capture_time=ph.capture_time,
+                file_size=ph.file_size,
             )
         )
     return outs

@@ -6,7 +6,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import Base, SessionLocal, engine
-from app.routers import auth, capture, files, history, photos, recommends
+import app.models  # noqa: F401  # 确保所有表模型被注册到 Base.metadata
+from app.routers import auth, capture, files, history, payment, photos, recommends
 from app.services.cleanup import cleanup_expired_guest_sessions
 
 logging.basicConfig(level=logging.INFO)
@@ -48,6 +49,7 @@ app.include_router(auth.router)
 app.include_router(recommends.router)
 app.include_router(capture.router)
 app.include_router(history.router)
+app.include_router(payment.router)
 app.include_router(photos.router)
 app.include_router(files.router)
 

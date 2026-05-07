@@ -31,6 +31,18 @@ class LoginIn(BaseModel):
     password: str
 
 
+class DeleteAccountIn(BaseModel):
+    password: str = Field(..., min_length=6, max_length=128)
+
+
+class RegisterOut(BaseModel):
+    """注册成功即签发 JWT，客户端无需再调登录接口。"""
+
+    access_token: str
+    token_type: str = "bearer"
+    user: UserPublic
+
+
 class RecommendOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -76,7 +88,9 @@ class PhotoOut(BaseModel):
     owner_user_id: Optional[str]
     file_name: str
     url: str
+    robot_id: str = ""
     capture_time: datetime
+    file_size: Optional[float] = None
 
 
 class ClaimIn(BaseModel):
@@ -96,4 +110,32 @@ class ConnectHistoryOut(BaseModel):
     robot_id: str
     connect_time: datetime
     is_success: bool
+    status: str
+
+
+class PaymentCreateIn(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    photo_id: str
+    photo_display_id: Optional[str] = Field(None, alias="photoDisplayId")
+    robot_id: str = Field("", alias="robotId")
+    amount: float = 0.0
+    order_id: Optional[str] = Field(None, alias="orderId")
+
+
+class PaymentOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    order_id: str
+    photo_id: str
+    photo_display_id: str = ""
+    robot_id: str
+    amount: float
+    pay_time: datetime
+    status: str
+
+
+class PaymentStatusOut(BaseModel):
+    order_id: str
     status: str

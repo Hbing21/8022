@@ -20,7 +20,7 @@ def my_photos(
     rows = (
         db.query(Photo)
         .filter(Photo.owner_user_id == user.id)
-        .order_by(Photo.capture_time.desc())
+        .order_by(Photo.capture_time.desc(), Photo.file_name.asc(), Photo.id.asc())
         .limit(min(limit, 500))
         .all()
     )
@@ -31,7 +31,9 @@ def my_photos(
             owner_user_id=p.owner_user_id,
             file_name=p.file_name,
             url=p.public_path,
+            robot_id=p.robot_id or "",
             capture_time=p.capture_time,
+            file_size=p.file_size,
         )
         for p in rows
     ]

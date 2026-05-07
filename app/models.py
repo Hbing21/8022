@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
 
 from app.database import Base
 
@@ -82,3 +82,30 @@ class RecommendLike(Base):
     user_id = Column(String(36), ForeignKey("users.id"), nullable=False, index=True)
     recommend_id = Column(String(36), ForeignKey("recommend_spots.id"), nullable=False, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class PaymentRecord(Base):
+    __tablename__ = "payment_records"
+    __table_args__ = (UniqueConstraint("user_id", "order_id", name="uq_user_order"),)
+
+    id = Column(String(36), primary_key=True, default=_uuid)
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=False, index=True)
+    order_id = Column(String(128), nullable=False, index=True)
+    photo_id = Column(String(36), ForeignKey("photos.id"), nullable=False, index=True)
+    photo_display_id = Column(String(256), nullable=False, default="")
+    robot_id = Column(String(128), nullable=False, default="")
+    amount = Column(Float, nullable=False, default=0.0)
+    status = Column(String(64), nullable=False, default="支付成功")
+    pay_time = Column(DateTime, default=datetime.utcnow, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class PaymentDailySeq(Base):
+    __tablename__ = "payment_daily_seq"
+    __table_args__ = (UniqueConstraint("user_id", "yyyymmdd", name="uq_payment_daily_seq"),)
+
+    id = Column(String(36), primary_key=True, default=_uuid)
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=False, index=True)
+    yyyymmdd = Column(String(8), nullable=False, index=True)
+    last_seq = Column(Integer, nullable=False, default=0)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
