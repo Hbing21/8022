@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.deps import require_user
+from app.filename_sort import natural_key
 from app.models import Photo, User
 from app.schemas import PhotoOut
 
@@ -23,6 +24,15 @@ def my_photos(
         .order_by(Photo.capture_time.desc(), Photo.file_name.asc(), Photo.id.asc())
         .limit(min(limit, 500))
         .all()
+    )
+
+    # 同一会话内 `photo_1.jpg`/`photo_10.jpg` 字典序问题：这里用自然序兜底。
+    rows.sort(
+        key=lambda p: (
+            -p.capture_time.timestamp(),
+            natural_key(p.file_name or ""),
+            p.id,
+        )
     )
     return [
         PhotoOut(

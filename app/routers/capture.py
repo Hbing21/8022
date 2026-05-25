@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.config import get_settings
 from app.database import get_db
 from app.deps import get_optional_user, require_user
+from app.filename_sort import natural_key
 from app.models import CaptureSession, Photo, User
 from app.schemas import CaptureStartIn, CaptureStartOut, ClaimIn, PhotoOut
 
@@ -112,6 +113,11 @@ def import_from_robot(
 
     robot_session_id = data.get("session") or ""
     items = data.get("photos") or []
+    # 照片名 `photo_1.jpg`/`photo_10.jpg` 存在字典序问题，这里做自然序排序再逐个导入
+    items = sorted(
+        [it for it in items if isinstance(it, dict)],
+        key=lambda it: natural_key(str(it.get("name") or "")),
+    )
     sess.robot_session_id = str(robot_session_id)
     sess.status = "imported"
     parsed_capture_time = _parse_robot_session_time(str(robot_session_id))
@@ -191,6 +197,16 @@ def list_session_photos(
         .filter(Photo.session_id == session_id)
         .order_by(Photo.capture_time.desc(), Photo.file_name.asc(), Photo.id.asc())
         .all()
+    )
+
+    # 同一会话内 capture_time 往往相同，靠数据库 `file_name.asc()` 可能仍是字典序。
+    # 这里统一用自然序兜底确保 `...photo_1, photo_2, photo_10...`。
+    photos.sort(
+        key=lambda p: (
+            -p.capture_time.timestamp(),
+            natural_key(p.file_name or ""),
+            p.id,
+        )
     )
 
     outs: List[PhotoOut] = []
